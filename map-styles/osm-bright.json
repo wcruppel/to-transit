@@ -14,7 +14,7 @@
   "sources": {
     "openmaptiles": {
       "type": "vector",
-      "url": "pmtiles://https://to-transit-map-assets.sfo3.digitaloceanspaces.com/toronto-osm.pmtiles",
+      "url": "pmtiles://https://to-transit-map-assets.sfo3.digitaloceanspaces.com/toronto-osm-25-09-28.pmtiles",
       "attribution": "© <a href='https://www.openstreetmap.org/copyright' target=_blank>OpenStreetMap</a> contributors"
     }
   },
