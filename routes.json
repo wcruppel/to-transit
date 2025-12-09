@@ -553,6 +553,12 @@
       "name": "Markham Rd"
     },
     {
+      "tag": "103",
+      "type": "bus",
+      "direction": "NorthSouth",
+      "name": "Mount Pleasant North"
+    },
+    {
       "tag": "104",
       "type": "bus",
       "direction": "NorthSouth",
@@ -574,7 +580,7 @@
       "tag": "107",
       "type": "bus",
       "direction": "NorthSouth",
-      "name": "York University Heights"
+      "name": "Alness-Chesswood"
     },
     {
       "tag": "108",
@@ -697,12 +703,6 @@
       "name": "Davenport"
     },
     {
-      "tag": "128",
-      "type": "bus",
-      "direction": "EastWest",
-      "name": "Stanley Greene"
-    },
-    {
       "tag": "129",
       "type": "bus",
       "direction": "NorthSouth",
@@ -775,10 +775,22 @@
       "name": "Lawrence-Donway"
     },
     {
+      "tag": "164",
+      "type": "bus",
+      "direction": "EastWest",
+      "name": "Castlefield"
+    },
+    {
       "tag": "165",
       "type": "bus",
       "direction": "EastWest",
       "name": "Weston Rd North"
+    },
+    {
+      "tag": "166",
+      "type": "bus",
+      "direction": "EastWest",
+      "name": "Toryork"
     },
     {
       "tag": "167",
@@ -823,22 +835,10 @@
       "name": "Stockyards"
     },
     {
-      "tag": "200",
+      "tag": "191",
       "type": "bus",
       "direction": "NorthSouth",
-      "name": "Toronto Zoo"
-    },
-    {
-      "tag": "201",
-      "type": "bus",
-      "direction": "NorthSouth",
-      "name": "Bluffer's Park"
-    },
-    {
-      "tag": "202",
-      "type": "bus",
-      "direction": "EastWest",
-      "name": "Cherry Beach"
+      "name": "Underhill"
     },
     {
       "tag": "300",
@@ -1027,6 +1027,12 @@
       "name": "Sheppard East"
     },
     {
+      "tag": "386",
+      "type": "bus",
+      "direction": "EastWest",
+      "name": "Scarborough"
+    },
+    {
       "tag": "395",
       "type": "bus",
       "direction": "EastWest",
@@ -1103,6 +1109,12 @@
       "type": "streetcar",
       "direction": "EastWest",
       "name": "St Clair"
+    },
+    {
+      "tag": "806",
+      "type": "bus",
+      "direction": "EastWest",
+      "name": "Line 6 Shuttle"
     },
     {
       "tag": "900",

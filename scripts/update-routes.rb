@@ -6,6 +6,7 @@ require 'rexml/document'
 require 'json'
 require 'set'
 
+# TODO: Update this to use new data source, as nextbus is no longer supported (even though it's still live for now, it's not perfect and missing routes e.g. 508)
 TTC_ROUTES_URL = 'https://retro.umoiq.com/service/publicXMLFeed?command=routeList&a=ttc'
 ROUTES_FILE = './routes.json'
 
@@ -66,6 +67,7 @@ DIRECTION_MAPPING = {
   '99' => 'NorthSouth',  # Arrow Rd
   '100' => 'NorthSouth', # Flemingdon Park
   '102' => 'NorthSouth', # Markham Rd
+  '103' => 'NorthSouth', # Mount Pleasant North
   '104' => 'NorthSouth', # Faywood
   '105' => 'NorthSouth', # Dufferin North
   '106' => 'NorthSouth', # Sentinel
@@ -86,6 +88,7 @@ DIRECTION_MAPPING = {
   '167' => 'NorthSouth', # Pharmacy North
   '168' => 'NorthSouth', # Symington
   '171' => 'NorthSouth', # Mount Dennis
+  '191' => 'NorthSouth', # Underhill
   '200' => 'NorthSouth', # Toronto Zoo
   '201' => 'NorthSouth', # Bluffer'S Park
   '302' => 'NorthSouth', # Kingston Rd-McCowan
@@ -178,7 +181,9 @@ DIRECTION_MAPPING = {
   '154' => 'EastWest',   # Curran Hall
   '161' => 'EastWest',   # Rogers Rd
   '162' => 'EastWest',   # Lawrence-Donway
+  '164' => 'EastWest',   # Castlefield
   '165' => 'EastWest',   # Weston Rd North
+  '166' => 'EastWest',   # Toryork
   '169' => 'EastWest',   # Huntingwood
   '184' => 'EastWest',   # Ancaster Park
   '185' => 'EastWest',   # Sheppard Central
@@ -202,6 +207,7 @@ DIRECTION_MAPPING = {
   '354' => 'EastWest',   # Lawrence East
   '384' => 'EastWest',   # Sheppard West
   '385' => 'EastWest',   # Sheppard East
+  '386' => 'EastWest',   # Scarborough
   '395' => 'EastWest',   # York Mills
   '396' => 'EastWest',   # Wilson
   '501' => 'EastWest',   # Queen
@@ -212,6 +218,7 @@ DIRECTION_MAPPING = {
   '507' => 'EastWest',   # Long Branch
   '509' => 'EastWest',   # Harbourfront
   '512' => 'EastWest',   # St Clair
+  '806' => 'EastWest',   # Line 6 Shuttle
   '905' => 'EastWest',   # Eglinton East Express
   '939' => 'EastWest',   # Finch Express
   '952' => 'EastWest',   # Lawrence West Express
@@ -232,7 +239,7 @@ NAME_REPLACEMENTS = [
 
 def get_route_type(tag)
   tag_num = tag.to_i
-  
+
   # Streetcars
   if (501..512).include?(tag_num) || %w[301 304 305 306 310 312].include?(tag)
     'streetcar'
@@ -243,46 +250,46 @@ end
 
 def get_route_direction(tag)
   direction = DIRECTION_MAPPING[tag]
-  
+
   unless direction
     raise "Direction not defined for route #{tag}. Please add it to DIRECTION_MAPPING in the script.\n" \
           "Check the route details at: https://www.ttc.ca/routes-and-schedules/#{tag}"
   end
-  
+
   direction
 end
 
 def clean_route_name(title, tag)
   # Remove the route number prefix (e.g., "7-Bathurst" -> "Bathurst")
   name = title.gsub(/^\d+-/, '')
-  
+
   # Apply replacement patterns
   NAME_REPLACEMENTS.each do |pattern, replacement|
     name = name.gsub(pattern, replacement)
   end
-  
+
   name
 end
 
 def fetch_xml(url)
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
-  
+
   unless response.is_a?(Net::HTTPSuccess)
     raise "Failed to fetch XML: #{response.code} #{response.message}"
   end
-  
+
   response.body
 end
 
 def parse_xml_routes(xml_data)
   doc = REXML::Document.new(xml_data)
   routes = []
-  
+
   doc.elements.each('body/route') do |route|
     tag = route.attributes['tag']
     title = route.attributes['title']
-    
+
     if tag && title
       routes << {
         'tag' => tag,
@@ -292,46 +299,46 @@ def parse_xml_routes(xml_data)
       }
     end
   end
-  
+
   # Sort routes by tag number for consistent ordering
   routes.sort_by! { |route| route['tag'].to_i }
-  
+
   routes
 end
 
 def update_routes_file
   puts 'Fetching routes from TTC XML feed...'
   xml_data = fetch_xml(TTC_ROUTES_URL)
-  
+
   puts 'Parsing XML data...'
   new_routes = parse_xml_routes(xml_data)
-  
+
   puts "Found #{new_routes.length} routes"
-  
+
   # Check if routes.json exists and compare
   if File.exist?(ROUTES_FILE)
     existing_data = JSON.parse(File.read(ROUTES_FILE))
     existing_routes = existing_data['routes'] || []
-    
+
     existing_tags = existing_routes.map { |route| route['tag'] }.to_set
     new_tags = new_routes.map { |route| route['tag'] }.to_set
-    
+
     removed_tags = existing_tags - new_tags
-    
+
     unless removed_tags.empty?
       puts "\nWarning: The following routes are missing from the XML feed:"
       removed_tags.sort_by(&:to_i).each do |tag|
         removed_route = existing_routes.find { |route| route['tag'] == tag }
         puts "  - Route #{tag}: #{removed_route['name']} (#{removed_route['type']})"
       end
-      
+
       puts "\nOptions:"
       puts "  k) Keep existing routes and update others"
       puts "  r) Remove missing routes and update"
       puts "  c) Cancel update"
       print "Choose (k/r/c): "
       response = STDIN.gets.chomp.downcase
-      
+
       case response
       when 'k', 'keep'
         # Keep existing routes that are missing from XML feed
@@ -349,20 +356,20 @@ def update_routes_file
       end
     end
   end
-  
+
   # Sort the final routes list
   new_routes.sort_by! { |route| route['tag'].to_i }
-  
+
   routes_json = {
     'routes' => new_routes
   }
-  
+
   puts 'Writing updated routes.json...'
   File.write(ROUTES_FILE, JSON.pretty_generate(routes_json))
-  
+
   puts 'Routes file updated successfully!'
   puts "Updated with #{new_routes.length} routes"
-  
+
 rescue => error
   puts "Error updating routes: #{error}"
   exit(1)
